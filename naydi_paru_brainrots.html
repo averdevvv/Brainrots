@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Найди Пару: Брейнроты</title>
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
+
+:root {
+  --bg: #101019;
+  --panel: #1b1b28;
+  --panel2: #252538;
+  --text: #fff;
+  --muted: #a9a9bd;
+  --accent: #ffdf4d;
+  --accent2: #ff5e9c;
+  --danger: #ff536f;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+body {
+  font-family: 'Nunito', system-ui, sans-serif;
+  background:
+    radial-gradient(circle at 20% 15%, #30305a 0, transparent 28%),
+    radial-gradient(circle at 80% 75%, #43233d 0, transparent 30%),
+    var(--bg);
+  color: var(--text);
+}
+button, input { font: inherit; }
+button {
+  border: 0; cursor: pointer; color: var(--text);
+  background: var(--panel2); border-radius: 18px;
+  padding: 17px 28px; font-weight: 900; letter-spacing: .5px;
+  transition: transform .12s ease, filter .12s ease;
+}
+button:active { transform: scale(.96); }
+button:hover { filter: brightness(1.12); }
+.primary {
+  color: #17120b;
+  background: linear-gradient(135deg, #ffe96b, #ffb72e);
+  box-shadow: 0 10px 35px #ffcc3a33;
+}
+.danger { background: #49202b; color: #ff9aae; }
+.screen {
+  width: min(100%, 1000px); height: 100%;
+  margin: auto; padding: 24px;
+  display: flex; flex-direction: column;
+}
+.hidden { display: none !important; }
+#menu { align-items: center; justify-content: center; text-align: center; }
+#menu h1 { margin: 0; font-size: clamp(42px, 9vw, 84px); line-height: .88; letter-spacing: -4px; }
+#menu h2 { margin: 8px 0 28px; color: var(--accent); font-size: clamp(25px, 5vw, 42px); letter-spacing: 5px; }
+.hero-art { height: 180px; width: min(90vw, 700px); position: relative; margin-bottom: 10px; }
+.hero-card {
+  position: absolute; width: 115px; height: 145px; border-radius: 25px;
+  display: grid; place-items: center; font-size: 70px;
+  background: linear-gradient(145deg, #34344c, #1b1b29);
+  border: 3px solid #ffffff18;
+  box-shadow: 0 15px 30px #0006;
+}
+.h1 { left: 7%; transform: rotate(-12deg); top: 18px; }
+.h2 { left: 25%; transform: rotate(-4deg); top: 2px; }
+.h3 { left: 43%; transform: rotate(6deg); top: 12px; }
+.h4 { left: 61%; transform: rotate(13deg); top: 1px; }
+.h5 { left: 79%; transform: rotate(20deg); top: 22px; }
+.menu-buttons { display: grid; gap: 13px; width: min(90vw, 330px); }
+.menu-buttons button { font-size: 20px; }
+.best { margin-top: 22px; color: var(--muted); font-size: 13px; letter-spacing: 2px; }
+
+.topbar, .gamebar {
+  display: flex; align-items: center; gap: 16px; min-height: 65px;
+}
+.topbar h2 { margin: 0; font-size: 30px; }
+.eyebrow { font-size: 11px; letter-spacing: 2px; color: var(--muted); }
+.back { width: 50px; height: 50px; padding: 0; font-size: 28px; }
+.level-grid {
+  margin-top: 22px; display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 12px; overflow: auto; padding: 5px 2px 30px;
+}
+.level-btn { min-height: 100px; position: relative; font-size: 27px; }
+.level-btn small { display: block; font-size: 10px; color: var(--muted); margin-top: 3px; }
+.level-btn.locked { opacity: .4; cursor: not-allowed; }
+.level-btn.completed { box-shadow: inset 0 0 0 2px #71f59d55; }
+.level-btn.completed::after { content: '✓'; position: absolute; top: 7px; right: 10px; color: #71f59d; font-size: 16px; }
+
+.gamebar { justify-content: space-between; }
+.game-stat { text-align: center; min-width: 70px; }
+.game-stat span { display: block; font-size: 9px; letter-spacing: 1.5px; color: var(--muted); }
+.game-stat b { font-size: 18px; }
+.progress { height: 7px; background: #ffffff10; border-radius: 10px; overflow: hidden; margin: 4px 0 18px; }
+.progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width .3s; }
+.board-wrap { flex: 1; display: grid; place-items: center; overflow: auto; padding-bottom: 10px; }
+.board {
+  width: min(92vw, 720px); display: grid; gap: clamp(7px, 1.4vw, 13px);
+  margin: auto;
+}
+.card {
+  aspect-ratio: 1; padding: 0; perspective: 800px; background: transparent;
+}
+.card-inner {
+  width: 100%; height: 100%; position: relative;
+  transform-style: preserve-3d; transition: transform .35s cubic-bezier(.2,.8,.2,1);
+}
+.card.flipped .card-inner, .card.matched .card-inner { transform: rotateY(180deg); }
+.face {
+  position: absolute; inset: 0; border-radius: clamp(10px, 2vw, 20px);
+  display: grid; place-items: center; backface-visibility: hidden;
+  border: 2px solid #ffffff10; overflow: hidden;
+}
+.backface {
+  background: linear-gradient(145deg, #292942, #161622);
+  font-size: clamp(18px, 5vw, 36px);
+  color: #ffffff20;
+}
+.front {
+  transform: rotateY(180deg);
+  background: #f7f5ee;
+  box-shadow: 0 8px 22px #0003;
+}
+.front svg { width: 82%; height: 82%; }
+.matched .front { box-shadow: 0 0 0 3px #71f59d, 0 0 35px #71f59d55; }
+
+.modal {
+  position: fixed; inset: 0; z-index: 10;
+  background: #08080dcc; display: grid; place-items: center; padding: 20px;
+}
+.modal-card {
+  width: min(92vw, 440px); background: #1d1d2b; border: 1px solid #ffffff12;
+  border-radius: 30px; padding: 34px; text-align: center;
+  box-shadow: 0 30px 100px #0009;
+}
+.modal-card h2 { font-size: 42px; margin: 6px 0; }
+.win-emoji { font-size: 65px; }
+.modal-buttons { display: grid; gap: 10px; margin-top: 20px; }
+
+.settings-card {
+  margin-top: 22px; background: var(--panel); border-radius: 25px; padding: 24px;
+}
+.setting-row {
+  display: grid; grid-template-columns: 1fr minmax(120px, 280px) auto;
+  align-items: center; gap: 20px; padding: 18px 0; border-bottom: 1px solid #ffffff0d;
+}
+.toggle-row { grid-template-columns: 1fr auto; }
+input[type="range"] { accent-color: var(--accent); width: 100%; }
+input[type="checkbox"] { width: 28px; height: 28px; accent-color: var(--accent); }
+#resetBtn { margin-top: 20px; width: 100%; }
+
+@media (max-width: 650px) {
+  .screen { padding: 15px; }
+  .hero-art { transform: scale(.82); margin-bottom: -10px; }
+  .hero-card { width: 90px; height: 115px; font-size: 52px; }
+  .level-grid { grid-template-columns: repeat(4, 1fr); }
+  .gamebar { gap: 5px; }
+  .game-stat { min-width: 48px; }
+}
+@media (max-width: 420px) {
+  .level-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+</style>
+</head>
+<body>
+  <div id="app">
+    <div id="menu" class="screen">
+      <div class="hero-art" aria-hidden="true">
+        <div class="hero-card h1">☕</div>
+        <div class="hero-card h2">🪵</div>
+        <div class="hero-card h3">🍌</div>
+        <div class="hero-card h4">🧀</div>
+        <div class="hero-card h5">🥥</div>
+      </div>
+      <h1>НАЙДИ ПАРУ</h1>
+      <h2>БРЕЙНРОТОВ</h2>
+      <div class="menu-buttons">
+        <button id="startBtn" class="primary">НАЧАТЬ</button>
+        <button id="settingsBtn">НАСТРОЙКИ</button>
+      </div>
+      <div class="best">РЕКОРД: <span id="bestScore">0</span></div>
+    </div>
+
+    <div id="levels" class="screen hidden">
+      <header class="topbar">
+        <button class="back" data-back="menu">←</button>
+        <div>
+          <div class="eyebrow">ВЫБЕРИ УРОВЕНЬ</div>
+          <h2>УРОВНИ</h2>
+        </div>
+      </header>
+      <div id="levelGrid" class="level-grid"></div>
+    </div>
+
+    <div id="game" class="screen hidden">
+      <header class="gamebar">
+        <button class="back" data-back="levels">←</button>
+        <div class="game-stat"><span>УРОВЕНЬ</span><b id="levelNo">1</b></div>
+        <div class="game-stat"><span>ХОДЫ</span><b id="moves">0</b></div>
+        <div class="game-stat"><span>ПАРЫ</span><b><span id="pairs">0</span>/<span id="pairTotal">0</span></b></div>
+      </header>
+      <div class="progress"><div id="progressBar"></div></div>
+      <main class="board-wrap">
+        <div id="board" class="board"></div>
+      </main>
+    </div>
+
+    <div id="settings" class="screen hidden">
+      <header class="topbar">
+        <button class="back" data-back="menu">←</button>
+        <div><div class="eyebrow">ПАРАМЕТРЫ</div><h2>НАСТРОЙКИ</h2></div>
+      </header>
+      <div class="settings-card">
+        <label class="setting-row">
+          <span>ГРОМКОСТЬ</span>
+          <input id="volume" type="range" min="0" max="1" step="0.05">
+          <span id="volumeValue">70%</span>
+        </label>
+        <label class="setting-row toggle-row">
+          <span>ВИБРАЦИЯ</span>
+          <input id="vibration" type="checkbox">
+        </label>
+        <button id="resetBtn" class="danger">СБРОСИТЬ ПРОГРЕСС</button>
+      </div>
+    </div>
+
+    <div id="winModal" class="modal hidden">
+      <div class="modal-card">
+        <div class="win-emoji">🔥</div>
+        <div class="eyebrow">УРОВЕНЬ ПРОЙДЕН</div>
+        <h2 id="winTitle">КРАСАВА!</h2>
+        <p>Ходов: <b id="winMoves">0</b></p>
+        <div class="modal-buttons">
+          <button id="nextBtn" class="primary">СЛЕДУЮЩИЙ</button>
+          <button id="levelsBtn">УРОВНИ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+const CHARACTERS = [
+  { name: "Капучина", emoji: "☕", bg: "#f0d0ad", accent: "#7d4d35" },
+  { name: "Тунг", emoji: "🪵", bg: "#c88b57", accent: "#4a2b1c" },
+  { name: "Бананини", emoji: "🍌", bg: "#ffe66b", accent: "#8d7110" },
+  { name: "Сырелло", emoji: "🧀", bg: "#ffe0a6", accent: "#c98b2e" },
+  { name: "Кокобум", emoji: "🥥", bg: "#b7dfc2", accent: "#3f7653" },
+  { name: "Мокачино", emoji: "🍫", bg: "#d5a17b", accent: "#67351f" },
+  { name: "Панини", emoji: "🥪", bg: "#e9c18a", accent: "#8c4e2e" },
+  { name: "Пиксельо", emoji: "👾", bg: "#cdb7ff", accent: "#6040a7" },
+  { name: "Лимончелло", emoji: "🍋", bg: "#e9ef87", accent: "#657118" },
+  { name: "Арбузини", emoji: "🍉", bg: "#ffb3aa", accent: "#31774a" }
+];
+
+// 20 levels: number of pairs grows from 2 to 20.
+const LEVELS = Array.from({length: 20}, (_, i) => ({
+  pairs: 2 + i,
+  cols: i < 3 ? 2 : i < 7 ? 4 : i < 13 ? 5 : 6
+}));
+
+let progress = Number(localStorage.getItem("brainrot_progress") || 1);
+let best = Number(localStorage.getItem("brainrot_best") || 0);
+let volume = Number(localStorage.getItem("brainrot_volume") ?? 0.7);
+let vibration = localStorage.getItem("brainrot_vibration") === "true";
+
+let level = 1, deck = [], first = null, second = null, lock = false, moves = 0, pairs = 0;
+let audioCtx = null;
+
+$("#bestScore").textContent = best;
+$("#volume").value = volume;
+$("#volumeValue").textContent = Math.round(volume * 100) + "%";
+$("#vibration").checked = vibration;
+
+function show(id) {
+  $$(".screen").forEach(x => x.classList.add("hidden"));
+  $("#" + id).classList.remove("hidden");
+}
+function beep(freq=440, duration=.07, type="sine") {
+  if (volume <= 0) return;
+  try {
+    audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.value = volume * .04;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + duration);
+  } catch {}
+}
+function buzz() { if (vibration && navigator.vibrate) navigator.vibrate(25); }
+
+function svgCharacter(c) {
+  // Original, simple vector mascots. No external image assets.
+  const safe = c.emoji;
+  return `<svg viewBox="0 0 100 100" role="img" aria-label="${c.name}">
+    <circle cx="50" cy="50" r="43" fill="${c.bg}"/>
+    <circle cx="34" cy="39" r="6" fill="#201b22"/>
+    <circle cx="66" cy="39" r="6" fill="#201b22"/>
+    <path d="M31 62 Q50 75 69 62" fill="none" stroke="${c.accent}" stroke-width="6" stroke-linecap="round"/>
+    <text x="50" y="58" text-anchor="middle" font-size="30">${safe}</text>
+  </svg>`;
+}
+
+function renderLevels() {
+  const grid = $("#levelGrid");
+  grid.innerHTML = "";
+  for (let i=1; i<=20; i++) {
+    const b = document.createElement("button");
+    const unlocked = i <= progress;
+    const completed = i < progress;
+    b.className = "level-btn " + (!unlocked ? "locked " : "") + (completed ? "completed" : "");
+    b.innerHTML = `${unlocked ? i : "🔒"}<small>${LEVELS[i-1].pairs} пар</small>`;
+    if (unlocked) b.onclick = () => startLevel(i);
+    grid.appendChild(b);
+  }
+}
+
+function startLevel(n) {
+  level = n; first = second = null; lock = false; moves = pairs = 0;
+  const cfg = LEVELS[n-1];
+  $("#levelNo").textContent = n;
+  $("#moves").textContent = 0;
+  $("#pairs").textContent = 0;
+  $("#pairTotal").textContent = cfg.pairs;
+  $("#progressBar").style.width = "0%";
+
+  const chars = [...CHARACTERS].sort(() => Math.random() - .5).slice(0, cfg.pairs);
+  deck = [...chars, ...chars].sort(() => Math.random() - .5).map((c, idx) => ({...c, idx}));
+  const board = $("#board");
+  board.style.gridTemplateColumns = `repeat(${cfg.cols}, 1fr)`;
+  board.innerHTML = "";
+
+  deck.forEach(card => {
+    const el = document.createElement("button");
+    el.className = "card";
+    el.innerHTML = `<div class="card-inner">
+      <div class="face backface">?</div>
+      <div class="face front">${svgCharacter(card)}</div>
+    </div>`;
+    el.dataset.idx = card.idx;
+    el.onclick = () => flipCard(el, card);
+    board.appendChild(el);
+  });
+  show("game");
+}
+
+function flipCard(el, card) {
+  if (lock || el.classList.contains("flipped") || el.classList.contains("matched")) return;
+  el.classList.add("flipped"); beep(330, .04);
+  if (!first) { first = {el, card}; return; }
+  second = {el, card}; moves++;
+  $("#moves").textContent = moves;
+  lock = true;
+
+  if (first.card.name === second.card.name) {
+    setTimeout(() => {
+      first.el.classList.add("matched");
+      second.el.classList.add("matched");
+      pairs++;
+      $("#pairs").textContent = pairs;
+      $("#progressBar").style.width = (pairs / LEVELS[level-1].pairs * 100) + "%";
+      beep(620, .1, "triangle"); buzz();
+      first = second = null; lock = false;
+      if (pairs === LEVELS[level-1].pairs) finishLevel();
+    }, 220);
+  } else {
+    setTimeout(() => {
+      first.el.classList.remove("flipped");
+      second.el.classList.remove("flipped");
+      beep(160, .08, "square");
+      first = second = null; lock = false;
+    }, 700);
+  }
+}
+
+function finishLevel() {
+  if (level === progress && progress < 20) {
+    progress++;
+    localStorage.setItem("brainrot_progress", progress);
+  }
+  const score = Math.max(0, Math.round(10000 / Math.max(1, moves)));
+  if (score > best) {
+    best = score;
+    localStorage.setItem("brainrot_best", best);
+    $("#bestScore").textContent = best;
+  }
+  $("#winMoves").textContent = moves;
+  $("#winTitle").textContent = level === 20 ? "ВСЕ 20 УРОВНЕЙ!" : "КРАСАВА!";
+  $("#nextBtn").textContent = level === 20 ? "ЕЩЁ РАЗ" : "СЛЕДУЮЩИЙ";
+  $("#winModal").classList.remove("hidden");
+  beep(740, .1, "triangle");
+  setTimeout(() => beep(980, .12, "triangle"), 100);
+}
+
+$("#startBtn").onclick = () => { renderLevels(); show("levels"); };
+$("#settingsBtn").onclick = () => show("settings");
+$("#nextBtn").onclick = () => {
+  $("#winModal").classList.add("hidden");
+  startLevel(level === 20 ? 20 : level + 1);
+};
+$("#levelsBtn").onclick = () => {
+  $("#winModal").classList.add("hidden");
+  renderLevels(); show("levels");
+};
+$$("[data-back]").forEach(b => b.onclick = () => {
+  if (b.dataset.back === "levels") renderLevels();
+  show(b.dataset.back);
+});
+$("#volume").oninput = e => {
+  volume = Number(e.target.value);
+  $("#volumeValue").textContent = Math.round(volume * 100) + "%";
+  localStorage.setItem("brainrot_volume", volume);
+  beep();
+};
+$("#vibration").onchange = e => {
+  vibration = e.target.checked;
+  localStorage.setItem("brainrot_vibration", vibration);
+};
+$("#resetBtn").onclick = () => {
+  if (!confirm("Точно сбросить все открытые уровни?")) return;
+  progress = 1; best = 0;
+  localStorage.removeItem("brainrot_progress");
+  localStorage.removeItem("brainrot_best");
+  $("#bestScore").textContent = 0;
+  renderLevels();
+  alert("Прогресс сброшен.");
+};
+
+</script>
+</body>
+</html>
